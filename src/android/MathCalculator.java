@@ -18,7 +18,7 @@ public class MathCalculator extends CordovaPlugin {
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
-        Log.d(TAG, "Initializing mathcalculator");
+//        Log.d(TAG, "Initializing mathcalculator");
     }
 
     @Override
