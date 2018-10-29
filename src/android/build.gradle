@@ -5,6 +5,7 @@ repositories {
         url 'https://maven.google.com/'
         name 'Google'
     }
+    maven { url 'http://alaldinf040.risk.regn.net:8081/nexus/content/repositories/releases' }
 }
 
 
