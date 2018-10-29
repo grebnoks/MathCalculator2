@@ -1,14 +1,3 @@
-repositories {
-    mavenLocal()
-    mavenCentral()
-    maven {
-        url 'https://maven.google.com/'
-        name 'Google'
-    }
-    maven { url 'http://alaldinf040.risk.regn.net:8081/nexus/content/repositories/releases' }
-}
-
-
 android {
     packagingOptions {
         exclude 'META-INF/DEPENDENCIES'
@@ -21,6 +10,19 @@ android {
         multiDexEnabled true
     }
 }
+
+
+
+repositories {
+//    mavenLocal()
+    mavenCentral()
+    jcenter()
+    maven {
+        url 'https://maven.google.com/'
+    }
+    maven { url 'http://alaldinf040.risk.regn.net:8081/nexus/content/repositories/releases' }
+}
+
 
 def vanguardVersion = "25.1.12+"
 
