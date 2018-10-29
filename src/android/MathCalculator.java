@@ -91,7 +91,7 @@ public class MathCalculator extends CordovaPlugin {
 //        else if(action.equals("initializeVGD")) {
 //            this.initializeVGD(args, callbackContext);
 //            return true;
-        }
+//        }
         return false;
     }
 
