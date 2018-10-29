@@ -88,33 +88,33 @@ public class MathCalculator extends CordovaPlugin {
             this.substract(args, callbackContext);
             return true;
         }
-        else if(action.equals("initializeVGD")) {
-            this.initializeVGD(args, callbackContext);
-            return true;
+//        else if(action.equals("initializeVGD")) {
+//            this.initializeVGD(args, callbackContext);
+//            return true;
         }
         return false;
     }
 
-    private void initializeVGD(JSONArray args, CallbackContext callback)
-    {
-        if(args != null)
-        {
-            try
-            {
-//                int p1 = Integer.parseInt(args.getJSONObject(0).getString("param1"));
-//                int p2 = Integer.parseInt(args.getJSONObject(0).getString("param2"));
+//    private void initializeVGD(JSONArray args, CallbackContext callback)
+//    {
+//        if(args != null)
+//        {
+//            try
+//            {
+////                int p1 = Integer.parseInt(args.getJSONObject(0).getString("param1"));
+////                int p2 = Integer.parseInt(args.getJSONObject(0).getString("param2"));
+////
+////                callback.success(""+ (p1+p2) );
 //
-//                callback.success(""+ (p1+p2) );
-
-            }catch(Exception ex)
-            {
-                callback.error("Something went wrong "  + ex);
-            }
-        }else
-        {
-            callback.error("Please donot pass null value");
-        }
-    }
+//            }catch(Exception ex)
+//            {
+//                callback.error("Something went wrong "  + ex);
+//            }
+//        }else
+//        {
+//            callback.error("Please donot pass null value");
+//        }
+//    }
 
 
     private void add(JSONArray args, CallbackContext callback)
