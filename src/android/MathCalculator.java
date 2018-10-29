@@ -73,7 +73,7 @@ public class MathCalculator extends CordovaPlugin {
 //                        Handle error here};});
                     }
                 }
-            )
+            );
         }
 
     @Override
