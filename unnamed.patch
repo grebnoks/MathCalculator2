@@ -1,0 +1,536 @@
+Index: src/android/MathCalculator.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/android/MathCalculator.java	(revision 6b47545bd101d0065a82f00687c4b7d4dff6ef5a)
++++ src/android/MathCalculator.java	(date 1540588572637)
+@@ -1,17 +1,58 @@
+ package cordova.plugin.mathcalculator;
+ 
++import android.app.Activity;
++import android.content.Context;
++import android.content.Intent;
++import android.content.pm.PackageInfo;
++import android.content.pm.PackageManager;
++import android.os.Bundle;
++import android.os.Handler;
++import android.util.Log;
++
+ import org.apache.cordova.CordovaWebView;
+ import org.apache.cordova.CallbackContext;
+ import org.apache.cordova.CordovaPlugin;
+ import org.apache.cordova.CordovaInterface;
+ 
++import com.lexisnexis.risk.mobile.telematics.vanguardshared.settings.SdkSetting;
++import com.lexisnexis.risk.mobile.telematics.vanguardshared.settings.SdkSettingUtil;
++import com.lexisnexis.risk.mobile.telematics.vanguardshared.settings.SettingsValues;
++import com.lexisnexis.risk.telematics.vanguard.sdk.VGDApiService;
++import com.lexisnexis.risk.telematics.vanguard.sdk.VGDJourneyManager;
++import com.lexisnexis.risk.telematics.vanguard.sdk.VGDSettingsManager;
++import com.lexisnexis.risk.telematics.vanguard.sdk.VGDUserManager;
++import com.lexisnexis.risk.telematics.vanguard.sdk.Vanguard;
++import com.lexisnexis.risk.telematics.vanguard.sdk.enums.VGDJourneyStartType;
++import com.lexisnexis.risk.telematics.vanguard.sdk.enums.VGDJourneyStopType;
++import com.lexisnexis.risk.telematics.vanguard.sdk.errors.VGDError;
++import com.lexisnexis.risk.telematics.vanguard.sdk.errors.VGDJourneyError;
++import com.lexisnexis.risk.telematics.vanguard.sdk.interfaces.ICompleteListener;
++import com.lexisnexis.risk.telematics.vanguard.sdk.interfaces.IVGDHttpCompleteListener;
++import com.lexisnexis.risk.telematics.vanguard.sdk.interfaces.IVGDJourneyRecording;
++import com.lexisnexis.risk.telematics.vanguard.sdk.interfaces.IVGDSettingsManager;
++import com.lexisnexis.risk.telematics.vanguard.sdk.interfaces.IVGDUserManagerCompleteListener;
++import com.lexisnexis.risk.telematics.vanguard.sdk.model.VGDHttpRequest;
++import com.lexisnexis.risk.telematics.vanguard.sdk.model.VGDHttpResponse;
++import com.lexisnexis.risk.telematics.vanguard.sdk.model.configurations.VGDConfigurationTripCollectionEnabled;
++import com.wunelli.android.vanguard.dataobjects.VGDUser;
++import com.wunelli.android.vanguard.logging.ServiceSendLogs;
++import com.wunelli.android.vanguard.settings.SettingsUtils;
++import com.wunelli.android.vanguard.webservicepojo.ResponseCode;
++import com.wunelli.android.wunelliutilities.StringUtils;
++import com.wunelli.android.wunelliutilities.WunelliResultReceiver;
++
+ import org.json.JSONArray;
+ import org.json.JSONException;
+ import org.json.JSONObject;
+ 
+-/**
+- * This class echoes a string called from JavaScript.
+- */
++import java.io.IOException;
++import java.io.InputStream;
++import java.util.ArrayDeque;
++import java.util.HashMap;
++import java.util.Iterator;
++import java.util.Map;
++import java.util.Queue;
++
+ public class MathCalculator extends CordovaPlugin {
+     private static final String TAG = "mathcalculator";
+ 
+@@ -33,18 +74,267 @@
+             this.substract(args, callbackContext);
+             return true;
+         }
++        else if(action.equals("lexisNexisHostedLogin")) {
++            this.lexisNexisHostedLogin(args, callbackContext);
++            return true;
++        }
++        else if(action.equals("startLocationServices")) {
++            this.startLocationServices(args, callbackContext);
++            return true;
++        }
++        else if(action.equals("stopRecordingJourneyAutoStartTimeout")) {
++            this.stopRecordingJourneyAutoStartTimeout(args, callbackContext);
++            return true;
++        }
++        else if(action.equals("startUserSession")) {
++            this.startUserSession(args, callbackContext);
++            return true;
++        }
++        else if(action.equals("isLoggedIn")) {
++            this.isLoggedIn(args, callbackContext);
++            return true;
++        }
++        else if(action.equals("initializeVGD")) {
++            this.initializeVGD(args, callbackContext);
++            return true;
++        }
++        else if(action.equals("isRecording")) {
++            this.isRecording(args, callbackContext);
++            return true;
++        }
++        else if(action.equals("sendLogs")) {
++            this.sendLogs(args, callbackContext);
++            return true;
++        }
++
+ //        else if(action.equals("getDate")) {
+ //            //An example of returning data back to the web layer]
+ //            final PluginResult result = new PluginResult(PluginResult.Status.OK, (new Date()).toString());
+ //            callbackContent.sendPluginResult(result);
+ //        }
++
++//         lexisNexisHostedLogin(String username, String password, final Promise promise)
++//         startLocationServices()
++//         stopRecordingJourneyAutoStartTimeout(int seconds)
++//         startUserSession(String refreshToken, final Promise promise)
++//         isLoggedIn(final Promise promise)
++//         initializeVGD(final ReadableMap params, final Promise promise)
++//         isRecording(final Promise promise)
++//         sendLogs(String userInput ,final Promise promise )
++
+         return false;
+     }
+ 
+-//   private void getDate()
+-//   {
+-//       if(){}
+-//   }
++
++//    @ReactMethod
++    public void sendLogs(String userInput ,final Promise promise ) {
++        try {
++            Intent intent = new Intent(getCurrentActivity(), ServiceSendLogs.class);
++            WunelliResultReceiver resultReceiver = new WunelliResultReceiver(new Handler());
++            final boolean[] isCalled = new boolean[1];
++            isCalled[0] = false;
++            WunelliResultReceiver.IWunelliResultReceiver iresultReceiver = new WunelliResultReceiver.IWunelliResultReceiver() {
++                @Override
++                public void onReceiveResult(int i, Bundle bundle) {
++                    if (!isCalled[0]) {
++                        isCalled[0] = true;
++                        promise.resolve(Boolean.toString(bundle.getInt(WunelliResultReceiver.RESULT_TYPE_KEY) == ResponseCode.SUCCESS));
++                    }
++                }
++            };
++            resultReceiver.setReceiver(iresultReceiver);
++            intent.putExtra(ServiceSendLogs.TAG_SERVICE_RECEIVER, resultReceiver);
++
++            intent.putExtra(ServiceSendLogs.SERVICE_USER_COMMENTS, userInput);
++            getCurrentActivity().startService(intent);
++        } catch(Throwable t) {
++            refreshItems();
++            promise.resolve(Boolean.toString(false));
++        }
++    }
++
++//    @ReactMethod
++    public void isRecording(final Promise promise) {
++        try {
++            promise.resolve(Boolean.toString(vgd.getJourneyManager().isRecording()));
++        } catch(Throwable t) {
++            refreshItems();
++            promise.resolve(Boolean.toString(false));
++        }
++    }
++
++//    @ReactMethod
++    public void initializeVGD(final ReadableMap params, final Promise promise) {
++        Runnable runnable=new Runnable() {
++            @Override
++            public void run() {
++                try {
++                    String apiKey=params.getString("apiKey");
++                    String url=params.getString("openDashboardURL")+"/";
++                    final boolean tmp[] = new boolean[1];
++                    tmp[0]=false;
++                    vgd.initialize(apiKey, url, new ICompleteListener() {
++                        @Override
++                        public void onComplete(VGDError vgdError) {
++                            if(vgdError==null) {
++                                boolean majorChange=false;
++                                if (params.hasKey("canSideLoad") && params.getBoolean("canSideLoad")==SettingsUtils.getAppVerificationEnabled(getReactApplicationContext())) {
++                                    SettingsUtils.setAppVerificationEnabled(getReactApplicationContext(), !params.getBoolean("canSideLoad"));
++                                    majorChange=true;
++                                }
++                                if (params.hasKey("canLogHttp") && params.getBoolean("canLogHttp")!=SettingsUtils.getLogHttpConversationEnabled(getReactApplicationContext())) {
++                                    SettingsUtils.setLogHttpConversationEnabled(getReactApplicationContext(), params.getBoolean("canLogHttp"));
++                                    majorChange=true;
++                                }
++                                if(majorChange) {
++                                    // Restart Application
++                                    Intent intent = new Intent(getCurrentActivity(), getCurrentActivity().getClass());
++                                    // Clear all activities and start new task
++                                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
++                                    getCurrentActivity().finish();
++                                    getCurrentActivity().startActivity(intent);
++                                }
++                            }
++                            if(!tmp[0]) {
++                                tmp[0]=true;
++                                if(vgdError!=null && vgdError.getErrorCode()==3) {
++                                    vgdError = null;
++                                    promise.resolve("Permissions");
++                                } else {
++                                    ICompleteListenerFactory.makeICompleteListener(promise).onComplete(vgdError);
++                                }
++                            }
++                        }
++                    });
++                } catch(Throwable t) {
++                    refreshItems();
++                    t.printStackTrace();
++                    rejectThrowable(promise);
++                }
++            }
++        };
++        if(vgd==null) {
++            initializeDelegateQueue.add(runnable);
++        } else {
++            runnable.run();
++        }
++    }
++
++
++//    @ReactMethod
++    public void isLoggedIn(final Promise promise) {
++        try {
++            //This seems to be the best way to verify if the user is logged in or not.
++            VGDUserManager vgdUserManager = getVum();
++            if (vgdUserManager == null) {
++                Log.e("isLoggedIn", "VGDUserManager was null");
++                promise.resolve(Boolean.toString(false));
++            } else {
++                promise.resolve(Boolean.toString(vgdUserManager.getCurrentUser() != null && !Strings.isNullOrEmpty(vum.getCurrentUser().getAccessToken())));
++            }
++        } catch(Throwable t) {
++            refreshItems();
++            t.printStackTrace();
++            promise.resolve(Boolean.toString(false));
++        }
++    }
++
++//    @ReactMethod
++    public void startUserSession(String refreshToken, final Promise promise) {
++        try {
++            VGDUserManager vgdUserManager = getVum();
++            if (vgdUserManager == null) {
++                ICompleteListenerFactory.makeICompleteListener(promise).onComplete(new VGDError(404, "Error starting user session - could not get vgd user manager"));
++                return;
++            }
++            if (refreshToken.isEmpty()) {
++                refreshToken = vgdUserManager.getCurrentUser().getRefreshToken();
++            }
++            if (refreshToken.isEmpty()) {
++                ICompleteListenerFactory.makeICompleteListener(promise).onComplete(new VGDError(404, "Error starting user session - no refresh token"));
++                return;
++            }
++            vum.startUserSessionWithToken(
++                    refreshToken,
++                    ICompleteListenerFactory.makeUserManagerCompleteListener(ICompleteListenerFactory.makeICompleteListener(promise))
++            );
++        } catch(Throwable t) {
++            refreshItems();
++            t.printStackTrace();
++            rejectThrowable(promise);
++        }
++    }
++
++//    @ReactMethod
++    public void stopRecordingJourneyAutoStartTimeout(int seconds) {
++        try {
++            vjm.stopRecordingJourneyAutostartTimeout(seconds);
++            vgd.stopRecording();
++        } catch(Throwable t) {
++            refreshItems();
++            t.printStackTrace();
++        }
++    }
++
++//    @ReactMethod
++    public void startLocationServices() {
++        Runnable r= new Runnable() {
++            @Override
++            public void run() {
++                try {
++                    vgd.startLocationServices(new IVGDJourneyRecording() {
++                        @Override
++                        public void didStartWithType(VGDJourneyStartType vgdJourneyType) {
++                            ReactNativeVanguardSdkModule.this.getReactApplicationContext().getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
++                                    .emit("didStartWithType", vgdJourneyType.getValue());
++                        }
++
++                        @Override
++                        public void failedToStartWithError(VGDJourneyError vgdJourneyError) {
++                            ReactNativeVanguardSdkModule.this.getReactApplicationContext().getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
++                                    .emit("failedToStartWithError", vgdJourneyError.getMessage());
++                        }
++
++                        @Override
++                        public void didStopWithType(VGDJourneyStopType vgdJourneyType, VGDJourneyError vgdJourneyError) {
++                            ReactNativeVanguardSdkModule.this.getReactApplicationContext().getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
++                                    .emit("didStopWithType", vgdJourneyType.getValue());
++                        }
++                    });
++                } catch(Throwable t) {
++                    refreshItems();
++                    t.printStackTrace();
++                }
++            }
++        };
++        new Thread(r).start();
++    }
++
++//    @ReactMethod
++    public void lexisNexisHostedLogin(String username, String password, final Promise promise) {
++        try {
++
++            new VGDUserManager(getReactApplicationContext()).startUserSessionWithUsername(
++                    username,
++                    password,
++                    new IVGDUserManagerCompleteListener() {
++                        @Override
++                        public void onComplete(VGDUser vgdUser, VGDError vgdError) {
++                            if(vgdError!=null && vgdError.getErrorCode()==3) {
++                                return;
++                            } else {
++                                ICompleteListenerFactory.makeICompleteListener(promise).onComplete(vgdError);
++                            }
++                        }
++                    }
++            );
++        } catch(Throwable t) {
++            rejectThrowable(promise);
++            t.printStackTrace();
++            refreshItems();
++        }
++    }
++
+ 
+     private void add(JSONArray args, CallbackContext callback)
+     {
+@@ -89,4 +379,131 @@
+         }
+     }
+ 
++
++    /*
++    *
++    * LOCAL METHODS
++    *
++    * */
++    public static Context globalApplicationContext;
++
++    public Context getApplicationContext() {
++        if(globalApplicationContext!=null) {
++            return globalApplicationContext;
++        }
++        Context reactContext=getReactApplicationContext();
++        Context applicationContext=null;
++        if(reactContext!=null) {
++            applicationContext = reactContext.getApplicationContext();
++        }
++        if(applicationContext==null) {
++            Activity currentActivity=getCurrentActivity();
++            if(currentActivity!=null) {
++                applicationContext = getCurrentActivity().getApplicationContext();
++            }
++        }
++        if(applicationContext==null) {
++            Log.e("RNAppContext", "Could not retrieve the application context.");
++        } else {
++            globalApplicationContext=applicationContext;
++        }
++        return applicationContext;
++    }
++
++    public void refreshItems() {
++        vum=null;
++        vgd=null;
++        vjm=null;
++        vsm=null;
++        vum=getVum();
++        vgd=getVgd();
++        vjm=getVjm();
++        vsm=getVsm();
++    }
++
++    public VGDUserManager getVum() {
++        if(vum==null) {
++            if(getApplicationContext()==null) {
++                return null;
++            }
++            vum=new VGDUserManager(getApplicationContext());
++        }
++        return vum;
++    }
++
++    public VGDJourneyManager getVjm() {
++        if(vjm==null) {
++            if(getApplicationContext()==null) {
++                return null;
++            }
++            vjm=new VGDJourneyManager(getApplicationContext());
++        }
++        return vjm;
++    }
++
++    public Vanguard getVgd() {
++        if(vgd==null) {
++            if(getApplicationContext()==null) {
++                return null;
++            }
++            vgd=new Vanguard(getApplicationContext());
++        }
++        return vgd;
++    }
++
++    public VGDSettingsManager getVsm() {
++        if(vsm==null) {
++            if(getApplicationContext()==null) {
++                return null;
++            }
++            vsm=new VGDSettingsManager(getApplicationContext());
++        }
++        return vsm;
++    }
++
++    public void rejectThrowable(Promise promise) {
++        ICompleteListenerFactory.makeICompleteListener(promise).onComplete(new VGDError(404, "Could not retrieve vgd user manager."));
++    }
++
++    VGDUserManager vum;
++    VGDJourneyManager vjm;
++    Vanguard vgd;
++    VGDSettingsManager vsm;
++    Queue<Runnable> initializeDelegateQueue;
++    public static String MAIN_CLASS;
++    public static String PERMISSION_CLASS;
++    public static String MESSAGE_READY_CLASS;
++
++    private static class ICompleteListenerFactory {
++        public static ICompleteListener makeICompleteListener(final Promise promise) {
++            return new ICompleteListener() {
++                @Override
++                public void onComplete(VGDError vgdError) {
++                    if(vgdError==null) {
++                        promise.resolve(null);
++                    } else {
++                        promise.reject("VGDError-" + vgdError.getErrorCode(), vgdError.getErrorMessage());
++                    }
++                }
++            };
++        }
++        public static IVGDUserManagerCompleteListener makeUserManagerCompleteListener(final ICompleteListener completeListener) {
++            return new IVGDUserManagerCompleteListener() {
++                @Override
++                public void onComplete(VGDUser vgdUser, VGDError vgdError) {
++                    completeListener.onComplete(vgdError);
++                }
++            };
++        }
++    }
++
++    public ReactNativeVanguardSdkModule(ReactApplicationContext reactContext) {
++        super(reactContext);
++        // This is needed so that the vanguard can be instantiated for react.  This is added in onHostResume.
++        // Until resume has been called, the context is not necessarily accessible and would potentially
++        // throw an exception until it is called appropriately.
++        reactContext.addLifecycleEventListener(this);
++        initializeDelegateQueue=new ArrayDeque<>();
++    }
++
+ }
+Index: www/MathCalculator.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- www/MathCalculator.js	(revision 6b47545bd101d0065a82f00687c4b7d4dff6ef5a)
++++ www/MathCalculator.js	(date 1540587955127)
+@@ -16,12 +16,51 @@
+ var PLUGIN_NAME = 'MathCalculator';
+ 
+ var MyCordovaPlugin = {
+-    add: function(arg0,success, error) {
++    add: function(arg0, success, error) {
+         exec(success , error, PLUGIN_NAME , 'add' , [arg0]);
+     },
+-    substract: function (arg0,success, error) {
++    substract: function (arg0, success, error) {
+         exec(success , error, PLUGIN_NAME , 'substract' , [arg0]);
+-    }
++    },
++    lexisNexisHostedLogin: function (arg0, success, error) {
++        exec(success , error, PLUGIN_NAME , 'lexisNexisHostedLogin' , [arg0]);
++    },
++    startLocationServices: function (arg0, success, error) {
++        exec(success , error, PLUGIN_NAME , 'startLocationServices' , [arg0]);
++    },
++    stopRecordingJourneyAutoStartTimeout: function (arg0, success, error) {
++        exec(success , error, PLUGIN_NAME , 'stopRecordingJourneyAutoStartTimeout' , [arg0]);
++    },
++    startUserSession: function (arg0, success, error) {
++        exec(success , error, PLUGIN_NAME , 'startUserSession' , [arg0]);
++    },
++    isLoggedIn: function (arg0, success, error) {
++        exec(success , error, PLUGIN_NAME , 'isLoggedIn' , [arg0]);
++    },
++    initializeVGD: function (arg0, success, error) {
++        exec(success , error, PLUGIN_NAME , 'initializeVGD' , [arg0]);
++    },
++    isRecording: function (arg0, success, error) {
++        exec(success , error, PLUGIN_NAME , 'isRecording' , [arg0]);
++    },
++    sendLogs: function (arg0, success, error) {
++        exec(success , error, PLUGIN_NAME , 'sendLogs' , [arg0]);
++    },
++
++
++
++
++    // lexisNexisHostedLogin(String username, String password, final Promise promise)         startLocationServices()
++    // startLocationServices()
++    // stopRecordingJourneyAutoStartTimeout(int seconds)
++    // startUserSession(String refreshToken, final Promise promise)
++    // isLoggedIn(final Promise promise)
++    // initializeVGD(final ReadableMap params, final Promise promise)
++    // isRecording(final Promise promise)
++    // sendLogs(String userInput ,final Promise promise )
++
++
++
+ };
+ 
+ module.exports = MyCordovaPlugin;
+\ No newline at end of file

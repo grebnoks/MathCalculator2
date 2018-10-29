@@ -1,0 +1,27 @@
+repositories {
+    mavenLocal()
+}
+packagingOptions {
+    exclude 'META-INF/DEPENDENCIES'
+    exclude 'META-INF/NOTICE'
+    exclude 'META-INF/LICENSE'
+    exclude 'META-INF/LICENSE.txt'
+    exclude 'META-INF/NOTICE.txt'
+}
+
+android {
+    defaultConfig {
+        multiDexEnabled true
+    }
+}
+
+def vanguardVersion = "25.1.12+"
+
+dependencies {
+    compile "com.lexisnexis.risk.telematics.vanguard.sdk:vanguardshared:$vanguardVersion"
+    compile "com.lexisnexis.risk.telematics.vanguard.sdk:vanguarddomain:$vanguardVersion"
+    compile "com.lexisnexis.risk.telematics.vanguard.sdk:VANGUARD:$vanguardVersion"
+    compile "com.lexisnexis.risk.telematics.vanguard.sdk:WunelliUI:$vanguardVersion"
+    compile "com.lexisnexis.risk.telematics.vanguard.sdk:WunelliUtilities:$vanguardVersion"
+    compile 'com.android.support:multidex:1.0.1'
+}
