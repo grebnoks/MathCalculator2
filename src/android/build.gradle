@@ -19,10 +19,16 @@ android {
 def vanguardVersion = "25.1.12+"
 
 dependencies {
-    compile "com.lexisnexis.risk.telematics.vanguard.sdk:vanguardshared:$vanguardVersion"
-    compile "com.lexisnexis.risk.telematics.vanguard.sdk:vanguarddomain:$vanguardVersion"
-    compile "com.lexisnexis.risk.telematics.vanguard.sdk:VANGUARD:$vanguardVersion"
-    compile "com.lexisnexis.risk.telematics.vanguard.sdk:WunelliUI:$vanguardVersion"
-    compile "com.lexisnexis.risk.telematics.vanguard.sdk:WunelliUtilities:$vanguardVersion"
-    compile 'com.android.support:multidex:1.0.1'
+    def packageName="com.lexisnexis.risk.telematics.vanguard.sdk"
+    compile "$packageName:vanguardshared:$vanguardVersion"
+    compile "$packageName:vanguarddomain:$vanguardVersion"
+    compile "$packageName:VANGUARD:$vanguardVersion"
+    compile "$packageName:WunelliUI:$vanguardVersion"
+    compile "$packageName:WunelliUtilities:$vanguardVersion"
+//    compile "com.lexisnexis.risk.telematics.vanguard.sdk:vanguardshared:$vanguardVersion"
+//    compile "com.lexisnexis.risk.telematics.vanguard.sdk:vanguarddomain:$vanguardVersion"
+//    compile "com.lexisnexis.risk.telematics.vanguard.sdk:VANGUARD:$vanguardVersion"
+//    compile "com.lexisnexis.risk.telematics.vanguard.sdk:WunelliUI:$vanguardVersion"
+//    compile "com.lexisnexis.risk.telematics.vanguard.sdk:WunelliUtilities:$vanguardVersion"
+//    compile 'com.android.support:multidex:1.0.1'
 }
