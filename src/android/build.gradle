@@ -20,7 +20,7 @@ repositories {
     maven {
         url 'https://maven.google.com/'
     }
-    maven { url 'http://alaldinf040.risk.regn.net:8081/nexus/content/repositories/releases' }
+//    maven { url 'http://alaldinf040.risk.regn.net:8081/nexus/content/repositories/releases' }
 }
 
 
