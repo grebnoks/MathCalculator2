@@ -19,9 +19,9 @@ var MyCordovaPlugin = {
     add: function(arg0,success, error) {
         exec(success , error, PLUGIN_NAME , 'add' , [arg0]);
     },
-    initializeVGD: function (arg0, success, error) {
-        exec(success , error, PLUGIN_NAME , 'initializeVGD' , [arg0]);
-    },
+    // initializeVGD: function (arg0, success, error) {
+    //     exec(success , error, PLUGIN_NAME , 'initializeVGD' , [arg0]);
+    // },
     substract: function (arg0,success, error) {
         exec(success , error, PLUGIN_NAME , 'substract' , [arg0]);
     }
